@@ -1,0 +1,38 @@
+# 试点服务源码（独立 git 仓库，不纳入本项目）
+software-package-server/
+
+# 示例生成物（每次 render 刷新）
+/openAPI.yaml
+api-contract.detected.yaml
+
+# 本地 repo-bootstrap 输出
+gen-openapi-bootstrap-*/
+bootstrap/
+
+# 临时文件
+tmp/
+*.tmp
+
+# 华为云 APIG 导出样例
+DEFAULT-RELEASE-full-2026-*.yaml
+
+# 本地环境变量 / 凭证
+.env
+.env.*
+
+# Go 编译产物
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/go/bin
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
