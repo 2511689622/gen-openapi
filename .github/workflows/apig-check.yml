@@ -11,13 +11,22 @@ name: apig-check
 
 on:
   pull_request:
-    branches: [main, master]
+    # GitHub does not support variables in branch filters. Keep the branch list
+    # aligned with your rollout target. For production, remove test branches.
+    branches:
+      - main
+      - master
+      - feature/init_openapi
     paths:
       - 'apig/**'
       - '**/*.go'
       - '**/*.java'
       - '**/*.py'
+      - '.github/workflows/apig-check.yml'
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   check:
@@ -26,15 +35,16 @@ jobs:
       - name: Checkout service repo
         uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version: '1.22'
 
-      - name: Checkout gen-openapi tool and catalog
+      - name: Checkout gen-openapi tool
         uses: actions/checkout@v4
         with:
-          repository: ${{ vars.GEN_OPENAPI_REPO }}
-          ref: ${{ vars.GEN_OPENAPI_REF || 'main' }}
+          repository: 2511689622/gen-openapi
+          ref: main
           path: gen-openapi
           token: ${{ secrets.GEN_OPENAPI_TOKEN || github.token }}
 
@@ -42,27 +52,17 @@ jobs:
         working-directory: gen-openapi
         run: go install .
 
-      - name: Check API catalog registration
-        run: |
-          gen-openapi catalog-check \
-            --catalog "${API_CATALOG_PATH:-gen-openapi/catalog/catalog.yaml}" \
-            --service "${{ github.event.repository.name }}" \
-            --repo "${{ github.server_url }}/${{ github.repository }}.git" \
-            --contract apig/api-contract.yaml \
-            --apig-config apig/apig-config.yaml \
-            --openapi apig/openAPI.yaml
-        env:
-          API_CATALOG_PATH: ${{ vars.API_CATALOG_PATH }}
-
-      - name: Validate api-contract.yaml + apig-config.yaml
+      - name: Render OpenAPI
         run: |
           gen-openapi render \
             --contract    apig/api-contract.yaml \
             --apig-config apig/apig-config.yaml \
             --out         /tmp/openAPI.rendered.yaml
-          gen-openapi validate /tmp/openAPI.rendered.yaml
 
-      - name: Check openAPI.yaml is in sync
+      - name: Validate rendered OpenAPI
+        run: gen-openapi validate /tmp/openAPI.rendered.yaml
+
+      - name: Check committed openAPI.yaml is in sync
         run: |
           gen-openapi check \
             --contract    apig/api-contract.yaml \

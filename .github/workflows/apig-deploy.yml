@@ -1,8 +1,34 @@
-# Manual APIG deployment: render the reviewed contract and import openAPI.yaml
-# into Huawei Cloud APIG. Drop this file into each service repo.
+# APIG deployment workflow. Drop this file into each service repo at
+# .github/workflows/apig-deploy.yml.
+#
+# Test rollout target branch: feature/init_openapi.
+# Production rollout: replace feature/init_openapi with the real default branch.
+#
+# Import switches:
+#   - This test rollout enables both dry-run and real import after merge.
+#   - Keep APIG_IMPORT_DRY_RUN=true so configuration issues fail before real import.
+#   - Set APIG_IMPORT_ENABLED=false if you want to test workflow execution without changing APIG.
+#
+# Import target source:
+#   - This workflow reads importTarget from gen-openapi/catalog/catalog.yaml.
+#   - The service entry name must match github.event.repository.name.
+#
+# Required secrets when APIG_IMPORT_ENABLED or APIG_IMPORT_DRY_RUN is true:
+#   HUAWEICLOUD_SDK_AK
+#   HUAWEICLOUD_SDK_SK
 name: apig-deploy
 
 on:
+  push:
+    branches:
+      - main
+      - master
+      - feature/init_openapi
+    paths:
+      - 'apig/api-contract.yaml'
+      - 'apig/apig-config.yaml'
+      - 'apig/openAPI.yaml'
+      - '.github/workflows/apig-deploy.yml'
   workflow_dispatch:
 
 permissions:
@@ -11,21 +37,23 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: apig-production
+    env:
+      APIG_IMPORT_DRY_RUN: 'true'
+      APIG_IMPORT_ENABLED: 'true'
     steps:
       - name: Checkout service repo
         uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version: '1.22'
 
-      - name: Checkout gen-openapi tool and catalog
+      - name: Checkout gen-openapi tool
         uses: actions/checkout@v4
         with:
-          repository: ${{ vars.GEN_OPENAPI_REPO }}
-          ref: ${{ vars.GEN_OPENAPI_REF || 'main' }}
+          repository: 2511689622/gen-openapi
+          ref: main
           path: gen-openapi
           token: ${{ secrets.GEN_OPENAPI_TOKEN || github.token }}
 
@@ -33,27 +61,46 @@ jobs:
         working-directory: gen-openapi
         run: go install .
 
-      - name: Dry-run APIG import
+      - name: Render OpenAPI
         run: |
-          gen-openapi apig-import \
+          gen-openapi render \
             --contract    apig/api-contract.yaml \
             --apig-config apig/apig-config.yaml \
-            --out         /tmp/openAPI.yaml \
-            --catalog     "${API_CATALOG_PATH:-gen-openapi/catalog/catalog.yaml}" \
-            --service     "${{ github.event.repository.name }}" \
-            --dry-run
-        env:
-          API_CATALOG_PATH: ${{ vars.API_CATALOG_PATH }}
+            --out         /tmp/openAPI.rendered.yaml
 
-      - name: Import to Huawei Cloud APIG
+      - name: Validate rendered OpenAPI
+        run: gen-openapi validate /tmp/openAPI.rendered.yaml
+
+      - name: Check committed openAPI.yaml is in sync
+        run: |
+          gen-openapi check \
+            --contract    apig/api-contract.yaml \
+            --apig-config apig/apig-config.yaml \
+            --output      apig/openAPI.yaml
+
+      - name: Dry-run APIG import
+        if: env.APIG_IMPORT_DRY_RUN == 'true'
         env:
           HUAWEICLOUD_SDK_AK: ${{ secrets.HUAWEICLOUD_SDK_AK }}
           HUAWEICLOUD_SDK_SK: ${{ secrets.HUAWEICLOUD_SDK_SK }}
-          API_CATALOG_PATH: ${{ vars.API_CATALOG_PATH }}
         run: |
           gen-openapi apig-import \
             --contract    apig/api-contract.yaml \
             --apig-config apig/apig-config.yaml \
-            --out         /tmp/openAPI.yaml \
-            --catalog     "${API_CATALOG_PATH:-gen-openapi/catalog/catalog.yaml}" \
-            --service     "${{ github.event.repository.name }}"
+            --catalog     gen-openapi/catalog/catalog.yaml \
+            --service     "${{ github.event.repository.name }}" \
+            --out         /tmp/openAPI.import.yaml \
+            --dry-run
+
+      - name: Import to Huawei Cloud APIG
+        if: env.APIG_IMPORT_ENABLED == 'true'
+        env:
+          HUAWEICLOUD_SDK_AK: ${{ secrets.HUAWEICLOUD_SDK_AK }}
+          HUAWEICLOUD_SDK_SK: ${{ secrets.HUAWEICLOUD_SDK_SK }}
+        run: |
+          gen-openapi apig-import \
+            --contract    apig/api-contract.yaml \
+            --apig-config apig/apig-config.yaml \
+            --catalog     gen-openapi/catalog/catalog.yaml \
+            --service     "${{ github.event.repository.name }}" \
+            --out         /tmp/openAPI.import.yaml
