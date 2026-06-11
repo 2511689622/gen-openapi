@@ -1,0 +1,59 @@
+# Manual APIG deployment: render the reviewed contract and import openAPI.yaml
+# into Huawei Cloud APIG. Drop this file into each service repo.
+name: apig-deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: apig-production
+    steps:
+      - name: Checkout service repo
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Checkout gen-openapi tool and catalog
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.GEN_OPENAPI_REPO }}
+          ref: ${{ vars.GEN_OPENAPI_REF || 'main' }}
+          path: gen-openapi
+          token: ${{ secrets.GEN_OPENAPI_TOKEN || github.token }}
+
+      - name: Install gen-openapi
+        working-directory: gen-openapi
+        run: go install .
+
+      - name: Dry-run APIG import
+        run: |
+          gen-openapi apig-import \
+            --contract    apig/api-contract.yaml \
+            --apig-config apig/apig-config.yaml \
+            --out         /tmp/openAPI.yaml \
+            --catalog     "${API_CATALOG_PATH:-gen-openapi/catalog/catalog.yaml}" \
+            --service     "${{ github.event.repository.name }}" \
+            --dry-run
+        env:
+          API_CATALOG_PATH: ${{ vars.API_CATALOG_PATH }}
+
+      - name: Import to Huawei Cloud APIG
+        env:
+          HUAWEICLOUD_SDK_AK: ${{ secrets.HUAWEICLOUD_SDK_AK }}
+          HUAWEICLOUD_SDK_SK: ${{ secrets.HUAWEICLOUD_SDK_SK }}
+          API_CATALOG_PATH: ${{ vars.API_CATALOG_PATH }}
+        run: |
+          gen-openapi apig-import \
+            --contract    apig/api-contract.yaml \
+            --apig-config apig/apig-config.yaml \
+            --out         /tmp/openAPI.yaml \
+            --catalog     "${API_CATALOG_PATH:-gen-openapi/catalog/catalog.yaml}" \
+            --service     "${{ github.event.repository.name }}"

@@ -1,0 +1,70 @@
+# PR check: ensure apig/openAPI.yaml stays in sync with apig/api-contract.yaml
+# and apig/apig-config.yaml in the same service repo.
+#
+# Drop this file into each service repo at .github/workflows/apig-check.yml.
+#
+# Required layout in the consuming repo:
+#   apig/api-contract.yaml
+#   apig/apig-config.yaml
+#   apig/openAPI.yaml
+name: apig-check
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'apig/**'
+      - '**/*.go'
+      - '**/*.java'
+      - '**/*.py'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout service repo
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Checkout gen-openapi tool and catalog
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.GEN_OPENAPI_REPO }}
+          ref: ${{ vars.GEN_OPENAPI_REF || 'main' }}
+          path: gen-openapi
+          token: ${{ secrets.GEN_OPENAPI_TOKEN || github.token }}
+
+      - name: Install gen-openapi
+        working-directory: gen-openapi
+        run: go install .
+
+      - name: Check API catalog registration
+        run: |
+          gen-openapi catalog-check \
+            --catalog "${API_CATALOG_PATH:-gen-openapi/catalog/catalog.yaml}" \
+            --service "${{ github.event.repository.name }}" \
+            --repo "${{ github.server_url }}/${{ github.repository }}.git" \
+            --contract apig/api-contract.yaml \
+            --apig-config apig/apig-config.yaml \
+            --openapi apig/openAPI.yaml
+        env:
+          API_CATALOG_PATH: ${{ vars.API_CATALOG_PATH }}
+
+      - name: Validate api-contract.yaml + apig-config.yaml
+        run: |
+          gen-openapi render \
+            --contract    apig/api-contract.yaml \
+            --apig-config apig/apig-config.yaml \
+            --out         /tmp/openAPI.rendered.yaml
+          gen-openapi validate /tmp/openAPI.rendered.yaml
+
+      - name: Check openAPI.yaml is in sync
+        run: |
+          gen-openapi check \
+            --contract    apig/api-contract.yaml \
+            --apig-config apig/apig-config.yaml \
+            --output      apig/openAPI.yaml
