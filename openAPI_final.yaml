@@ -1,0 +1,623 @@
+openapi: 3.0.3
+info:
+  title: APIGROPE_SOFTWARE_PKG
+  version: 2026-06-18-14:32:33
+servers:
+- url: $APIG_GROUP_ENTRY_URL
+paths:
+  /v1/cla:
+    get:
+      operationId: API_verifyCla
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      security:
+      - Authorizer_1: []
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+  /v1/sig:
+    get:
+      operationId: API_listSigs
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      security:
+      - Authorizer_1: []
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+  /v1/softwarepkg:
+    get:
+      operationId: API_listSoftwarePackages
+      parameters:
+      - in: query
+        name: phase
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      - in: query
+        name: pkg_name
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      - in: query
+        name: importer
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      - in: query
+        name: platform
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      - in: query
+        name: last_id
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      - in: query
+        name: count
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      - in: query
+        name: page_num
+        schema:
+          type: integer
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      - in: query
+        name: count_per_page
+        schema:
+          type: integer
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+    post:
+      operationId: API_applyNewSoftwarePackage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SoftwarePkgRequest'
+        required: true
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      security:
+      - Authorizer_1: []
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+  /v1/softwarepkg/{id}:
+    get:
+      operationId: API_getSoftwarePackage
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      - in: query
+        name: language
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        parameters:
+        - in: PATH
+          name: id
+          origin: REQUEST
+          value: id
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+    put:
+      operationId: API_updateSoftwarePackageApplication
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSoftwarePkgRequest'
+        required: true
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      security:
+      - Authorizer_1: []
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        parameters:
+        - in: PATH
+          name: id
+          origin: REQUEST
+          value: id
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+  /v1/softwarepkg/{id}/close:
+    put:
+      operationId: API_closeSoftwarePackage
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloseSoftwarePkgRequest'
+        required: true
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      security:
+      - Authorizer_1: []
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        parameters:
+        - in: PATH
+          name: id
+          origin: REQUEST
+          value: id
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+  /v1/softwarepkg/{id}/retest:
+    put:
+      operationId: API_rerunSoftwarePackageCi
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      security:
+      - Authorizer_1: []
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        parameters:
+        - in: PATH
+          name: id
+          origin: REQUEST
+          value: id
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+  /v1/softwarepkg/{id}/review:
+    get:
+      operationId: API_getSoftwarePackageUserReview
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      - in: query
+        name: language
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      security:
+      - Authorizer_1: []
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        parameters:
+        - in: PATH
+          name: id
+          origin: REQUEST
+          value: id
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+    post:
+      operationId: API_reviewSoftwarePackage
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+        required: true
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      security:
+      - Authorizer_1: []
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        parameters:
+        - in: PATH
+          name: id
+          origin: REQUEST
+          value: id
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+  /v1/softwarepkg/{id}/review/comment:
+    get:
+      operationId: API_listSoftwarePackageReviewComments
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        parameters:
+        - in: PATH
+          name: id
+          origin: REQUEST
+          value: id
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+    post:
+      operationId: API_createSoftwarePackageReviewComment
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewCommentRequest'
+        required: true
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      security:
+      - Authorizer_1: []
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        parameters:
+        - in: PATH
+          name: id
+          origin: REQUEST
+          value: id
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+  /v1/softwarepkg/{id}/review/comment/{cid}/translate:
+    post:
+      operationId: API_translateSoftwarePackageReviewComment
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      - in: path
+        name: cid
+        required: true
+        schema:
+          type: string
+        x-apigateway-pass-through: always
+        x-apigateway-orchestrations: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslationCommentRequest'
+        required: true
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        parameters:
+        - in: PATH
+          name: id
+          origin: REQUEST
+          value: id
+        - in: PATH
+          name: cid
+          origin: REQUEST
+          value: cid
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+  /v1/softwarepkg/applyinfo:
+    get:
+      operationId: API_getSoftwarePackageApplyInfo
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+  /v1/softwarepkg/committers:
+    post:
+      operationId: API_checkSoftwarePackageCommitters
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SoftwarePkgRepoRequest'
+        required: true
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      security:
+      - Authorizer_1: []
+      servers:
+      - url: $APIG_BACKEND_URL
+      x-apigateway-backend:
+        functionEndpoints:
+          function-urn: $APIG_FUNCTION_URN
+          invocation-type: sync
+          network-type: V1
+          timeout: 30000
+          version: latest
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+components:
+  responses:
+    default:
+      description: response example
+  securitySchemes:
+    Authorizer_1:
+      in: header
+      name: unused
+      type: apiKey
+      x-apigateway-auth-type: AUTHORIZER
+      x-apigateway-authorizer:
+        auth_downgrade_enabled: false
+        authorizer_alias_uri: ''
+        authorizer_type: FUNC
+        authorizer_uri: $APIG_AUTHORIZER_URN
+        authorizer_version: latest
+        need_body: true
+        network_type: V1
+        retry_attempts: 0
+        timeout: 30000
+        ttl: 0
+        type: FRONTEND
+    apig-auth-app:
+      in: header
+      name: Authorization
+      type: apiKey
+      x-apigateway-auth-type: AppSigv1
+    apig-auth-app-header:
+      in: header
+      name: Authorization
+      type: apiKey
+      x-apigateway-auth-opt:
+        appcode-auth-type: header
+      x-apigateway-auth-type: AppSigv1
+    apig-auth-iam:
+      in: header
+      name: unused
+      type: apiKey
+      x-apigateway-auth-type: IAM

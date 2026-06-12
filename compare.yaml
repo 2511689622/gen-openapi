@@ -1,0 +1,164 @@
+openapi: 3.0.3
+info:
+  title: APIGROPE_SOFTWARE_PKG
+  version: 2026-06-18-14:32:33
+servers:
+  - url: >-
+      https://b0165579ab244aa69546b365e41a4ad3.apic.cn-north-4.huaweicloudapis.com
+paths:
+  /v1/cla:
+    get:
+      operationId: API_verifyCla
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      servers:
+        - url: >-
+            https://b0165579ab244aa69546b365e41a4ad3.apic.cn-north-4.huaweicloudapis.com
+      x-apigateway-backend:
+        functionEndpoints:
+          alias-urn: ''
+          description: ''
+          function-urn: >-
+            urn:fss:cn-north-4:25f40abeecb84d3e90731de258ca71ec:function:default:custom-auth
+          invocation-type: sync
+          network-type: V1
+          req_protocol: HTTPS
+          timeout: 30000
+          version: latest
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+  /v1/sig:
+    get:
+      operationId: API_listSigs
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      servers:
+        - url: >-
+            https://b0165579ab244aa69546b365e41a4ad3.apic.cn-north-4.huaweicloudapis.com
+      x-apigateway-backend:
+        functionEndpoints:
+          alias-urn: ''
+          description: ''
+          function-urn: >-
+            urn:fss:cn-north-4:25f40abeecb84d3e90731de258ca71ec:function:default:custom-auth
+          invocation-type: sync
+          network-type: V1
+          req_protocol: HTTPS
+          timeout: 30000
+          version: latest
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+  /v1/softwarepkg/applyinfo:
+    get:
+      operationId: API_getSoftwarePackageApplyInfo
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      servers:
+        - url: >-
+            https://b0165579ab244aa69546b365e41a4ad3.apic.cn-north-4.huaweicloudapis.com
+      x-apigateway-backend:
+        functionEndpoints:
+          alias-urn: ''
+          description: ''
+          function-urn: >-
+            urn:fss:cn-north-4:25f40abeecb84d3e90731de258ca71ec:function:default:custom-auth
+          invocation-type: sync
+          network-type: V1
+          req_protocol: HTTPS
+          timeout: 30000
+          version: latest
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+  /v1/softwarepkg/committers:
+    post:
+      operationId: API_checkSoftwarePackageCommitters
+      requestBody:
+        content:
+          application/json:
+            schema:
+              example: ''
+              type: object
+      responses:
+        default:
+          description: response example
+          x-apigateway-result-failure-sample: ''
+          x-apigateway-result-normal-sample: ''
+      security:
+        - Authorizer_1: []
+      servers:
+        - url: >-
+            https://b0165579ab244aa69546b365e41a4ad3.apic.cn-north-4.huaweicloudapis.com
+      x-apigateway-backend:
+        functionEndpoints:
+          alias-urn: ''
+          description: ''
+          function-urn: >-
+            urn:fss:cn-north-4:25f40abeecb84d3e90731de258ca71ec:function:default:custom-auth
+          invocation-type: sync
+          network-type: V1
+          req_protocol: HTTPS
+          timeout: 30000
+          version: latest
+        type: FUNCTION
+      x-apigateway-cors: false
+      x-apigateway-is-send-fg-body-base64: true
+      x-apigateway-match-mode: NORMAL
+      x-apigateway-request-type: public
+components:
+  responses:
+    default:
+      description: response example
+  securitySchemes:
+    Authorizer_1:
+      in: header
+      name: unused
+      type: apiKey
+      x-apigateway-auth-type: AUTHORIZER
+      x-apigateway-authorizer:
+        auth_downgrade_enabled: false
+        authorizer_alias_uri: ''
+        authorizer_type: FUNC
+        authorizer_uri: >-
+          urn:fss:cn-north-4:25f40abeecb84d3e90731de258ca71ec:function:default:custom-auth
+        authorizer_version: latest
+        need_body: true
+        network_type: V1
+        retry_attempts: 0
+        timeout: 30000
+        ttl: 0
+        type: FRONTEND
+    apig-auth-app:
+      in: header
+      name: Authorization
+      type: apiKey
+      x-apigateway-auth-type: AppSigv1
+    apig-auth-app-header:
+      in: header
+      name: Authorization
+      type: apiKey
+      x-apigateway-auth-opt:
+        appcode-auth-type: header
+      x-apigateway-auth-type: AppSigv1
+    apig-auth-iam:
+      in: header
+      name: unused
+      type: apiKey
+      x-apigateway-auth-type: IAM
