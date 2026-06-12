@@ -1,0 +1,106 @@
+name: reusable-apig-deploy
+
+on:
+  workflow_call:
+    inputs:
+      gen_openapi_ref:
+        description: gen-openapi repository ref to checkout.
+        required: false
+        type: string
+        default: main
+      dry_run_enabled:
+        description: Run apig-import --dry-run before optional real import.
+        required: false
+        type: boolean
+        default: true
+      import_enabled:
+        description: Run the real Huawei Cloud APIG import.
+        required: false
+        type: boolean
+        default: true
+      catalog_path:
+        description: Catalog file path after checking out gen-openapi.
+        required: false
+        type: string
+        default: gen-openapi/catalog/catalog.yaml
+    secrets:
+      huaweicloud_ak:
+        required: true
+      huaweicloud_sk:
+        required: true
+      gen_openapi_token:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ai-dev-runner-linux-amd64-cpu-4
+    container:
+      image: swr.cn-north-4.myhuaweicloud.com/opensourceway/apig-runner:latest
+    steps:
+      - name: Checkout service repo
+        uses: actions/checkout@v4
+
+      - name: Check runner tools
+        run: |
+          go version
+          git --version
+          gh --version
+
+      - name: Checkout gen-openapi tool
+        uses: actions/checkout@v4
+        with:
+          repository: 2511689622/gen-openapi
+          ref: ${{ inputs.gen_openapi_ref }}
+          path: gen-openapi
+          token: ${{ secrets.gen_openapi_token || github.token }}
+
+      - name: Install gen-openapi
+        working-directory: gen-openapi
+        run: go install .
+
+      - name: Render OpenAPI
+        run: |
+          gen-openapi render \
+            --contract    apig/api-contract.yaml \
+            --apig-config apig/apig-config.yaml \
+            --out         /tmp/openAPI.rendered.yaml
+
+      - name: Validate rendered OpenAPI
+        run: gen-openapi validate /tmp/openAPI.rendered.yaml
+
+      - name: Check committed openAPI.yaml is in sync
+        run: |
+          gen-openapi check \
+            --contract    apig/api-contract.yaml \
+            --apig-config apig/apig-config.yaml \
+            --output      apig/openAPI.yaml
+
+      - name: Dry-run APIG import
+        if: inputs.dry_run_enabled
+        env:
+          HUAWEICLOUD_SDK_AK: ${{ secrets.huaweicloud_ak }}
+          HUAWEICLOUD_SDK_SK: ${{ secrets.huaweicloud_sk }}
+        run: |
+          gen-openapi apig-import \
+            --contract    apig/api-contract.yaml \
+            --apig-config apig/apig-config.yaml \
+            --catalog     "${{ inputs.catalog_path }}" \
+            --service     "${{ github.event.repository.name }}" \
+            --out         /tmp/openAPI.import.yaml \
+            --dry-run
+
+      - name: Import to Huawei Cloud APIG
+        if: inputs.import_enabled
+        env:
+          HUAWEICLOUD_SDK_AK: ${{ secrets.huaweicloud_ak }}
+          HUAWEICLOUD_SDK_SK: ${{ secrets.huaweicloud_sk }}
+        run: |
+          gen-openapi apig-import \
+            --contract    apig/api-contract.yaml \
+            --apig-config apig/apig-config.yaml \
+            --catalog     "${{ inputs.catalog_path }}" \
+            --service     "${{ github.event.repository.name }}" \
+            --out         /tmp/openAPI.import.yaml

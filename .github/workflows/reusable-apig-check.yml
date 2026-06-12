@@ -1,0 +1,60 @@
+name: reusable-apig-check
+
+on:
+  workflow_call:
+    inputs:
+      gen_openapi_ref:
+        description: gen-openapi repository ref to checkout.
+        required: false
+        type: string
+        default: main
+    secrets:
+      gen_openapi_token:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ai-dev-runner-linux-amd64-cpu-4
+    container:
+      image: swr.cn-north-4.myhuaweicloud.com/opensourceway/apig-runner:latest
+    steps:
+      - name: Checkout service repo
+        uses: actions/checkout@v4
+
+      - name: Check runner tools
+        run: |
+          go version
+          git --version
+          gh --version
+
+      - name: Checkout gen-openapi tool
+        uses: actions/checkout@v4
+        with:
+          repository: 2511689622/gen-openapi
+          ref: ${{ inputs.gen_openapi_ref }}
+          path: gen-openapi
+          token: ${{ secrets.gen_openapi_token || github.token }}
+
+      - name: Install gen-openapi
+        working-directory: gen-openapi
+        run: go install .
+
+      - name: Render OpenAPI
+        run: |
+          gen-openapi render \
+            --contract    apig/api-contract.yaml \
+            --apig-config apig/apig-config.yaml \
+            --out         /tmp/openAPI.rendered.yaml
+
+      - name: Validate rendered OpenAPI
+        run: gen-openapi validate /tmp/openAPI.rendered.yaml
+
+      - name: Check committed openAPI.yaml is in sync
+        run: |
+          gen-openapi check \
+            --contract    apig/api-contract.yaml \
+            --apig-config apig/apig-config.yaml \
+            --output      apig/openAPI.yaml

@@ -1,0 +1,142 @@
+name: reusable-apig-drift-scan
+
+on:
+  workflow_call:
+    inputs:
+      target_branch:
+        description: Branch to scan and create PR against.
+        required: true
+        type: string
+      gen_openapi_ref:
+        description: gen-openapi repository ref to checkout.
+        required: false
+        type: string
+        default: main
+      detect_mode:
+        required: false
+        type: string
+        default: static
+      detect_lang:
+        required: false
+        type: string
+        default: go
+      detect_framework:
+        required: false
+        type: string
+        default: gin
+      detect_openapi_url:
+        required: false
+        type: string
+        default: ''
+      detect_base_url:
+        required: false
+        type: string
+        default: ''
+    secrets:
+      github_token:
+        required: false
+      gen_openapi_token:
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  drift:
+    runs-on: ai-dev-runner-linux-amd64-cpu-4
+    container:
+      image: swr.cn-north-4.myhuaweicloud.com/opensourceway/apig-runner:latest
+    env:
+      TARGET_BRANCH: ${{ inputs.target_branch }}
+      DETECT_MODE: ${{ inputs.detect_mode }}
+      DETECT_LANG: ${{ inputs.detect_lang }}
+      DETECT_FRAMEWORK: ${{ inputs.detect_framework }}
+      DETECT_OPENAPI_URL: ${{ inputs.detect_openapi_url }}
+      DETECT_BASE_URL: ${{ inputs.detect_base_url }}
+    steps:
+      - name: Checkout service repo target branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_branch }}
+          fetch-depth: 0
+          token: ${{ secrets.github_token || github.token }}
+
+      - name: Check runner tools
+        run: |
+          go version
+          git --version
+          gh --version
+
+      - name: Checkout gen-openapi tool
+        uses: actions/checkout@v4
+        with:
+          repository: 2511689622/gen-openapi
+          ref: ${{ inputs.gen_openapi_ref }}
+          path: gen-openapi
+          token: ${{ secrets.gen_openapi_token || github.token }}
+
+      - name: Install gen-openapi
+        working-directory: gen-openapi
+        run: go install .
+
+      - name: Discover routes from source
+        run: |
+          args=(
+            --mode      "$DETECT_MODE"
+            --lang      "$DETECT_LANG"
+            --framework "$DETECT_FRAMEWORK"
+            --source    .
+            --service   "${{ github.event.repository.name }}"
+            --out       /tmp/api-contract.detected.yaml
+          )
+          if [ -n "$DETECT_OPENAPI_URL" ]; then
+            args+=(--openapi-url "$DETECT_OPENAPI_URL")
+          fi
+          if [ -n "$DETECT_BASE_URL" ]; then
+            args+=(--base-url "$DETECT_BASE_URL")
+          fi
+          gen-openapi discover "${args[@]}"
+
+      - name: Diff candidate against canonical contract
+        id: diff
+        run: |
+          set +e
+          gen-openapi diff \
+            --contract apig/api-contract.yaml \
+            --detected /tmp/api-contract.detected.yaml \
+            --out      /tmp/diff.md
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo "drift=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "drift=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload diff artifact
+        if: steps.diff.outputs.drift == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-contract-drift
+          path: /tmp/diff.md
+
+      - name: Configure git author
+        if: steps.diff.outputs.drift == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create reviewed drift PR
+        if: steps.diff.outputs.drift == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.github_token || github.token }}
+        run: |
+          gen-openapi pr \
+            --contract    apig/api-contract.yaml \
+            --detected    /tmp/api-contract.detected.yaml \
+            --apig-config apig/apig-config.yaml \
+            --openapi     apig/openAPI.yaml \
+            --base        "$TARGET_BRANCH" \
+            --branch      "gen-openapi/api-contract-drift-${{ github.run_id }}-${{ github.run_attempt }}" \
+            --title       "Update API contract from detected drift"
