@@ -46,7 +46,10 @@
       "Bash(\"/c/apache-maven-3.9.6/apache-maven-3.9.6/bin/mvn.cmd\" -f /d/project/dev_infraAgent/gen-openapi/EasySearch/pom.xml compile -q)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(cd /d/project/dev_infraAgent/gen-openapi/EasySearch && cat .github/workflows/notify-registry.yml | grep \"runs-on\")",
+      "Read(//d/d/project/dev_infraAgent/gen-openapi/EasySearch/.github/workflows/**)",
+      "Bash(\"/c/apache-maven-3.9.6/apache-maven-3.9.6/bin/mvn.cmd\" compile *)"
     ]
   }
 }
